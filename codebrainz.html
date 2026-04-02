@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CodeBrainz — Tricky Coding Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#0e0e16; --card:#15151f; --border:#252535;
+  --yellow:#fbbf24; --green:#22c55e; --red:#ef4444; --blue:#3b82f6;
+  --text:#f1f5f9; --dim:#64748b;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px;
+background-image:radial-gradient(ellipse at 50% 0%,rgba(251,191,36,0.08) 0%,transparent 60%);}
+.game{width:100%;max-width:600px;}
+
+/* HEADER */
+.hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.logo{font-size:1.3rem;font-weight:800;color:var(--yellow);}
+.score-box{display:flex;gap:16px;}
+.score-item{text-align:center;}
+.score-num{font-size:1.2rem;font-weight:700;color:var(--yellow);}
+.score-lbl{font-size:0.65rem;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+
+/* PROGRESS */
+.progress-wrap{margin-bottom:20px;}
+.progress-bar{height:4px;background:var(--border);border-radius:100px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--yellow),#f59e0b);border-radius:100px;transition:width 0.5s ease;}
+.progress-text{display:flex;justify-content:space-between;font-size:0.72rem;color:var(--dim);margin-top:6px;}
+
+/* TIMER */
+.timer-bar{height:3px;background:var(--border);border-radius:100px;overflow:hidden;margin-bottom:20px;}
+.timer-fill{height:100%;background:var(--green);border-radius:100px;transition:width 0.1s linear,background 0.3s;}
+
+/* CARD */
+.q-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:16px;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
+.q-category{font-size:0.65rem;color:var(--yellow);letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;}
+.q-text{font-size:1rem;font-weight:600;line-height:1.6;margin-bottom:8px;}
+.q-code{background:#0a0a12;border:1px solid var(--border);border-radius:10px;padding:14px;font-family:'Fira Code',monospace;font-size:0.82rem;color:#a5f3fc;line-height:1.8;margin-top:12px;overflow-x:auto;}
+
+/* OPTIONS */
+.options{display:flex;flex-direction:column;gap:10px;}
+.option{
+  padding:14px 18px; background:var(--card);
+  border:1.5px solid var(--border); border-radius:12px;
+  cursor:pointer; font-family:'Syne',sans-serif;
+  font-size:0.88rem; font-weight:600; color:var(--text);
+  transition:all 0.2s; display:flex; align-items:center; gap:12px;
+  text-align:left;
+}
+.option:hover:not(.disabled){border-color:var(--yellow);background:#1a1a28;transform:translateX(4px);}
+.option.correct{border-color:var(--green);background:rgba(34,197,94,0.1);color:var(--green);}
+.option.wrong{border-color:var(--red);background:rgba(239,68,68,0.1);color:var(--red);}
+.option.disabled{cursor:default;}
+.opt-letter{width:28px;height:28px;border:1.5px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;flex-shrink:0;}
+.option.correct .opt-letter{border-color:var(--green);background:rgba(34,197,94,0.2);}
+.option.wrong .opt-letter{border-color:var(--red);background:rgba(239,68,68,0.2);}
+
+/* EXPLANATION */
+.explanation{background:#0a0a12;border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+.explanation.show{display:block;}
+.exp-title{font-size:0.7rem;color:var(--yellow);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.exp-text{font-size:0.82rem;color:var(--dim);line-height:1.7;}
+
+/* NEXT BTN */
+.next-btn{width:100%;padding:14px;background:var(--yellow);color:#000;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:none;}
+.next-btn.show{display:block;}
+.next-btn:hover{background:#f59e0b;transform:translateY(-1px);}
+
+/* RESULT SCREEN */
+.result{text-align:center;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:40px 28px;display:none;}
+.result.show{display:block;}
+.result-emoji{font-size:4rem;margin-bottom:16px;}
+.result-title{font-size:1.8rem;font-weight:800;margin-bottom:8px;}
+.result-score{font-size:3rem;font-weight:800;color:var(--yellow);margin:16px 0;}
+.result-msg{color:var(--dim);font-size:0.9rem;margin-bottom:28px;}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:28px;}
+.rs{background:#0a0a12;border-radius:12px;padding:14px;}
+.rs-val{font-size:1.3rem;font-weight:700;}
+.rs-lbl{font-size:0.65rem;color:var(--dim);margin-top:2px;text-transform:uppercase;}
+.restart-btn{padding:14px 40px;background:var(--yellow);color:#000;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-size:0.9rem;font-weight:700;cursor:pointer;transition:all 0.2s;}
+.restart-btn:hover{background:#f59e0b;}
+</style>
+</head>
+<body>
+<div class="game">
+  <div class="hdr">
+    <div class="logo">🧠 CodeBrainz</div>
+    <div class="score-box">
+      <div class="score-item"><div class="score-num" id="scoreNum">0</div><div class="score-lbl">Score</div></div>
+      <div class="score-item"><div class="score-num" id="streakNum">0🔥</div><div class="score-lbl">Streak</div></div>
+    </div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text"><span id="qNum">Question 1 of 10</span><span id="diffTag">EASY</span></div>
+  </div>
+
+  <div class="timer-bar"><div class="timer-fill" id="timerFill" style="width:100%"></div></div>
+
+  <div class="q-card" id="qCard">
+    <div class="q-category" id="qCat">JAVASCRIPT</div>
+    <div class="q-text" id="qText"></div>
+    <div class="q-code" id="qCode" style="display:none"></div>
+  </div>
+
+  <div class="options" id="optionsWrap"></div>
+  <div class="explanation" id="explanation">
+    <div class="exp-title">💡 Explanation</div>
+    <div class="exp-text" id="expText"></div>
+  </div>
+  <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+
+  <div class="result" id="resultScreen">
+    <div class="result-emoji" id="resultEmoji">🏆</div>
+    <div class="result-title" id="resultTitle">Great Job!</div>
+    <div class="result-score" id="resultScore">0/10</div>
+    <div class="result-msg" id="resultMsg"></div>
+    <div class="result-stats">
+      <div class="rs"><div class="rs-val" id="rs1" style="color:var(--green)">0</div><div class="rs-lbl">Correct</div></div>
+      <div class="rs"><div class="rs-val" id="rs2" style="color:var(--red)">0</div><div class="rs-lbl">Wrong</div></div>
+      <div class="rs"><div class="rs-val" id="rs3" style="color:var(--yellow)">0</div><div class="rs-lbl">Best Streak</div></div>
+    </div>
+    <button class="restart-btn" onclick="startGame()">Play Again 🔄</button>
+  </div>
+</div>
+
+<script>
+const questions = [
+  { cat:'JAVASCRIPT', diff:'EASY', text:'What does typeof null return in JavaScript?', code:null, options:['null','undefined','object','string'], correct:2, exp:'"typeof null" returns "object" — this is a famous JavaScript bug from the early days that was kept for legacy compatibility.' },
+  { cat:'PYTHON', diff:'EASY', text:'What will this print?', code:'x = [1, 2, 3]\nprint(x[-1])', options:['1','3','-1','Error'], correct:1, exp:'Negative indexing in Python starts from -1, which refers to the last element. x[-1] = 3.' },
+  { cat:'C LANGUAGE', diff:'MEDIUM', text:'What is the output of this C code?', code:'int x = 5;\nprintf("%d", x++);', options:['6','5','4','Error'], correct:1, exp:'x++ is post-increment. The value of x (5) is used first in printf, then incremented to 6. So output is 5.' },
+  { cat:'JAVASCRIPT', diff:'MEDIUM', text:'What will this code output?', code:'console.log(0.1 + 0.2 === 0.3)', options:['true','false','NaN','Error'], correct:1, exp:'Due to floating-point precision issues, 0.1 + 0.2 = 0.30000000000000004, not exactly 0.3. So === returns false!' },
+  { cat:'PYTHON', diff:'MEDIUM', text:'What is the output?', code:'print(bool("") + bool("hello"))', options:['0','1','2','True'], correct:1, exp:'bool("") = False = 0, bool("hello") = True = 1. So 0 + 1 = 1.' },
+  { cat:'LOGIC', diff:'HARD', text:'How many times does "Hello" print?', code:'for i in range(3):\n  for j in range(3):\n    if i == j:\n      print("Hello")', options:['9','3','6','1'], correct:1, exp:'The condition i == j is true only when i and j are equal: (0,0), (1,1), (2,2). So "Hello" prints 3 times.' },
+  { cat:'JAVASCRIPT', diff:'HARD', text:'What does this output?', code:'console.log([] + [])', options:['[][]','""','undefined','0'], correct:1, exp:'When you add two arrays with +, both convert to empty strings. "" + "" = "". So the output is an empty string.' },
+  { cat:'C LANGUAGE', diff:'EASY', text:'What is the size of int in C (on most 32-bit systems)?', code:null, options:['1 byte','2 bytes','4 bytes','8 bytes'], correct:2, exp:'On most 32-bit systems, int is 4 bytes (32 bits). However, this can vary by platform and compiler.' },
+  { cat:'PYTHON', diff:'HARD', text:'What is the output?', code:'a = [1, 2, 3]\nb = a\nb.append(4)\nprint(a)', options:['[1, 2, 3]','[1, 2, 3, 4]','[4]','Error'], correct:1, exp:'In Python, b = a does NOT copy the list. Both a and b point to the same list object. So appending to b also changes a.' },
+  { cat:'LOGIC', diff:'MEDIUM', text:'What will this JavaScript output?', code:'let a = 1;\nlet b = a;\na = 2;\nconsole.log(b)', options:['1','2','undefined','Error'], correct:0, exp:'Numbers in JS are primitives — b = a copies the VALUE 1. Changing a to 2 does not affect b. So b remains 1.' },
+];
+
+let cur = 0, score = 0, streak = 0, bestStreak = 0, correct = 0, wrong = 0;
+let timer, timeLeft = 20;
+const TIMER = 20;
+
+function startGame() {
+  cur = 0; score = 0; streak = 0; bestStreak = 0; correct = 0; wrong = 0;
+  document.getElementById('resultScreen').classList.remove('show');
+  document.getElementById('qCard').style.display = 'block';
+  document.getElementById('optionsWrap').style.display = 'flex';
+  document.getElementById('nextBtn').classList.remove('show');
+  document.getElementById('explanation').classList.remove('show');
+  loadQuestion();
+}
+
+function loadQuestion() {
+  const q = questions[cur];
+  document.getElementById('qCat').textContent = q.cat;
+  document.getElementById('diffTag').textContent = q.diff;
+  document.getElementById('qNum').textContent = `Question ${cur+1} of ${questions.length}`;
+  document.getElementById('qText').textContent = q.text;
+  document.getElementById('progressFill').style.width = (cur/questions.length*100) + '%';
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('streakNum').textContent = streak + (streak >= 3 ? '🔥' : '');
+
+  const codeEl = document.getElementById('qCode');
+  if (q.code) { codeEl.textContent = q.code; codeEl.style.display = 'block'; }
+  else { codeEl.style.display = 'none'; }
+
+  const letters = ['A','B','C','D'];
+  document.getElementById('optionsWrap').innerHTML = q.options.map((o, i) =>
+    `<button class="option" onclick="answer(${i})">
+      <span class="opt-letter">${letters[i]}</span>${o}
+    </button>`).join('');
+
+  document.getElementById('explanation').classList.remove('show');
+  document.getElementById('nextBtn').classList.remove('show');
+  startTimer();
+}
+
+function startTimer() {
+  clearInterval(timer);
+  timeLeft = TIMER;
+  const fill = document.getElementById('timerFill');
+  fill.style.background = 'var(--green)';
+  fill.style.width = '100%';
+  timer = setInterval(() => {
+    timeLeft -= 0.1;
+    const pct = (timeLeft / TIMER) * 100;
+    fill.style.width = pct + '%';
+    if (pct < 40) fill.style.background = 'var(--yellow)';
+    if (pct < 15) fill.style.background = 'var(--red)';
+    if (timeLeft <= 0) { clearInterval(timer); timeUp(); }
+  }, 100);
+}
+
+function timeUp() {
+  streak = 0; wrong++;
+  const opts = document.querySelectorAll('.option');
+  opts.forEach((o, i) => {
+    o.classList.add('disabled');
+    if (i === questions[cur].correct) o.classList.add('correct');
+  });
+  showExplanation();
+}
+
+function answer(idx) {
+  clearInterval(timer);
+  const q = questions[cur];
+  const opts = document.querySelectorAll('.option');
+  opts.forEach(o => o.classList.add('disabled'));
+
+  if (idx === q.correct) {
+    opts[idx].classList.add('correct');
+    const bonus = timeLeft > 10 ? 20 : 10;
+    score += bonus; streak++; correct++;
+    if (streak > bestStreak) bestStreak = streak;
+  } else {
+    opts[idx].classList.add('wrong');
+    opts[q.correct].classList.add('correct');
+    streak = 0; wrong++;
+  }
+
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('streakNum').textContent = streak + (streak >= 3 ? '🔥' : '');
+  showExplanation();
+}
+
+function showExplanation() {
+  document.getElementById('expText').textContent = questions[cur].exp;
+  document.getElementById('explanation').classList.add('show');
+  document.getElementById('nextBtn').classList.add('show');
+  document.getElementById('nextBtn').textContent = cur < questions.length - 1 ? 'Next Question →' : '🏁 See Results';
+}
+
+function nextQuestion() {
+  cur++;
+  if (cur >= questions.length) { showResult(); return; }
+  loadQuestion();
+}
+
+function showResult() {
+  document.getElementById('qCard').style.display = 'none';
+  document.getElementById('optionsWrap').style.display = 'none';
+  document.getElementById('nextBtn').classList.remove('show');
+  document.getElementById('explanation').classList.remove('show');
+
+  const pct = Math.round((correct/questions.length)*100);
+  let emoji = '😅', title = 'Keep Practicing!';
+  if (pct >= 90) { emoji = '🏆'; title = 'Genius Coder!'; }
+  else if (pct >= 70) { emoji = '🎯'; title = 'Great Job!'; }
+  else if (pct >= 50) { emoji = '💪'; title = 'Not Bad!'; }
+
+  document.getElementById('resultEmoji').textContent = emoji;
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultScore').textContent = correct + '/' + questions.length;
+  document.getElementById('resultMsg').textContent = pct + '% accuracy — ' + (pct >= 70 ? 'You really know your code!' : 'Review the explanations and try again!');
+  document.getElementById('rs1').textContent = correct;
+  document.getElementById('rs2').textContent = wrong;
+  document.getElementById('rs3').textContent = bestStreak;
+  document.getElementById('resultScreen').classList.add('show');
+}
+
+startGame();
+</script>
+</body>
+</html>
